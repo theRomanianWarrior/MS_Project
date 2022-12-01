@@ -5,12 +5,13 @@ namespace Reactive
 {
     public static class Utils
     {
-        public static int Size = 11;
-        public static int NoExplorers = 50;//119; // No of worker agents
-        public static int NoResources = 1; // No of exits
-
-        public static int DelayBetweenTurns = 0;
-        public static Random RandNoGen = new();
+        public static readonly int Size = 11;
+        public static readonly int NoExplorers = 20;//119; // No of worker agents
+        public static readonly int NoResources = 1; // No of exits
+        public static readonly int SecondsBeforeAlarm = 5;
+        
+        public static readonly int DelayBetweenTurns = 0;
+        public static readonly Random RandNoGen = new();
 
 
         public static Coordinates ParseCoordinates(this string coordinates)
@@ -43,7 +44,7 @@ namespace Reactive
 
             if (t.Length > 1)
             {
-                for (int i = 1; i < t.Length - 1; i++)
+                for (var i = 1; i < t.Length - 1; i++)
                     parameters += t[i] + " ";
                 parameters += t[t.Length - 1];
             }
@@ -51,12 +52,12 @@ namespace Reactive
 
         public static string Str(object p1, object p2)
         {
-            return string.Format("{0} {1}", p1, p2);
+            return $"{p1} {p2}";
         }
 
         public static string Str(object p1, object p2, object p3)
         {
-            return string.Format("{0} {1} {2}", p1, p2, p3);
+            return $"{p1} {p2} {p3}";
         }
     }
 }

@@ -1,25 +1,23 @@
-﻿using System.Threading;
+﻿using ActressMas;
 
 namespace Reactive
 {
-    public class Program
+    public static class Program
     {
         private static void Main()
         {
-            //EnvironmentMas env = new EnvironmentMas(0, 100);
+            var env = new EnvironmentMas(0, 100);
 
             var planetAgent = new PlanetAgent();
-            MasEnvironmentSingleton.Instance.Add(planetAgent, "planet");
+            env.Add(planetAgent, "planet");
             
-            for (int i = 1; i <= Utils.NoExplorers; i++)
+            for (var i = 1; i <= Utils.NoExplorers; i++)
             {
                 var explorerAgent = new ExplorerAgent();
-                MasEnvironmentSingleton.Instance.Add(explorerAgent, "explorer" + i);
+                env.Add(explorerAgent, "explorer" + i);
             }
-
-            //Thread.Sleep(500);
-
-            MasEnvironmentSingleton.Instance.Start();
+            
+            env.Start();
         }
     }
 }

@@ -50,7 +50,6 @@
   <ItemGroup>
     <Compile Include="Coordinates.cs" />
     <Compile Include="ExplorerAgent.cs" />
-    <Compile Include="MasEnvironmentSingleton.cs" />
     <Compile Include="PlanetForm.cs">
       <SubType>Form</SubType>
     </Compile>

@@ -85,7 +85,7 @@ namespace Reactive
                         g.FillEllipse(Brushes.Blue, 20 + x * cellSize + 6, 20 + y * cellSize + 6, cellSize - 12, cellSize - 12);
                     }
 
-                    foreach (string v in _ownerAgent.Environment.Memory["ResourcePositions"].Values)
+                    foreach (string v in _ownerAgent.ResourcePositions.Values)
                     {
                         string[] t = v.Split();
                         int x = Convert.ToInt32(t[0]);
