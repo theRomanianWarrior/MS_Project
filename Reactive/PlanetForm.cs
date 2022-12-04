@@ -7,7 +7,7 @@ namespace Reactive
 {
     public partial class PlanetForm : Form
     {
-        private PlanetAgent _ownerAgent;
+        private CoordinatorAgent _ownerAgent;
         private Bitmap _doubleBufferImage;
         private Graphics g;
         private Brush lastColor = Brushes.Red;
@@ -17,7 +17,7 @@ namespace Reactive
             InitializeComponent();
         }
 
-        public void SetOwner(PlanetAgent a)
+        public void SetOwner(CoordinatorAgent a)
         {
             _ownerAgent = a;
         }
@@ -76,7 +76,7 @@ namespace Reactive
 
                 if (_ownerAgent != null)
                 {
-                    foreach (string v in _ownerAgent.ExplorerPositions.Values)
+                    foreach (string v in _ownerAgent.EvacuationAgentsPositions.Values)
                     {
                         string[] t = v.Split();
                         int x = Convert.ToInt32(t[0]);
@@ -85,7 +85,7 @@ namespace Reactive
                         g.FillEllipse(Brushes.Blue, 20 + x * cellSize + 6, 20 + y * cellSize + 6, cellSize - 12, cellSize - 12);
                     }
 
-                    foreach (string v in _ownerAgent.ResourcePositions.Values)
+                    foreach (string v in _ownerAgent.ExitsPositions.Values)
                     {
                         string[] t = v.Split();
                         int x = Convert.ToInt32(t[0]);

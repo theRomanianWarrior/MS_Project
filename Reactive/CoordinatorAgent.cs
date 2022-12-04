@@ -9,20 +9,20 @@ using System.Windows.Forms;
 
 namespace Reactive
 {
-    public class PlanetAgent : Agent
+    public class CoordinatorAgent : Agent
     {
         private PlanetForm _formGui;
-        public Dictionary<string, string> ExplorerPositions { get; set; }
-        public Dictionary<string, string> ResourcePositions { get; set; } // aka exits position
+        public Dictionary<string, string> EvacuationAgentsPositions { get; set; }
+        public Dictionary<string, string> ExitsPositions { get; set; } // aka exits position
         private readonly string _basePosition; // position of "special agent"
         private bool _alertWasStarted;
         private const int FieldOfViewAround = 2; // this mean 3x3
         private readonly List<string> _agentsNotifiedAboutAlarm = new();
 
-        public PlanetAgent()
+        public CoordinatorAgent()
         {
-            ExplorerPositions = new Dictionary<string, string>();
-            ResourcePositions = new Dictionary<string, string>();
+            EvacuationAgentsPositions = new Dictionary<string, string>();
+            ExitsPositions = new Dictionary<string, string>();
             _basePosition = Utils.Str(Utils.Size / 2, Utils.Size / 2);
 
             var t = new Thread(GuiThread);
@@ -55,7 +55,7 @@ namespace Reactive
                     compPos = Utils.Str(x, y);
                 }
 
-                ResourcePositions.Add("res" + i, compPos); // exits position
+                ExitsPositions.Add("res" + i, compPos); // exits position
                 resPos.Add(compPos);
             }
 
@@ -100,18 +100,18 @@ namespace Reactive
                 return true;
             }
             
-            foreach (var k in ExplorerPositions.Keys)// for each explorer in planet's database
+            foreach (var k in EvacuationAgentsPositions.Keys)// for each evacuation in coordinator's database
             {
-                if (k == sender)  // if current explorer from planet's database is same as explorer that have sent request to change
+                if (k == sender)  // if current evacuation from coordinator's database is same as evacuation that have sent request to change
                     continue;
-                if (ExplorerPositions[k] == position) // if explorer wants to move on a position that another explorer hold, send block
+                if (EvacuationAgentsPositions[k] == position) // if evacuation wants to move on a position that another evacuation hold, send block
                 {
                     Send(sender, "directionToExitBlocked");
                     return true;
                 }
             }
             
-            ExplorerPositions[sender] = position;
+            EvacuationAgentsPositions[sender] = position;
             
             return false;
         }
@@ -126,24 +126,24 @@ namespace Reactive
                     return;
                 }
 
-                foreach (string k in ExplorerPositions.Keys)
+                foreach (string k in EvacuationAgentsPositions.Keys)
                 {
                     if (k == sender)
                         continue;
-                    if (ExplorerPositions[k] == position)
+                    if (EvacuationAgentsPositions[k] == position)
                     {
                         Send(sender, "block");
                         return;
                     }
                 }
                 
-                ExplorerPositions[sender] = position;
+                EvacuationAgentsPositions[sender] = position;
 
-                if (ResourcePositions!.Values.Contains(position) && position != _basePosition) // if position is already on exit, remove agent
+                if (ExitsPositions!.Values.Contains(position) && position != _basePosition) // if position is already on exit, remove agent
                 {
                     _formGui.UpdatePlanetGUI();
                     Console.WriteLine(@$"Agent {sender} is out from {position}");
-                    ExplorerPositions.Remove(sender);
+                    EvacuationAgentsPositions.Remove(sender);
                     Environment.Remove(sender);
                     if (Environment.NoAgents == 1)
                     {
@@ -167,17 +167,17 @@ namespace Reactive
 
                 var agentsPositionsExceptSender = GetAgentsPositionExceptSender(sender);
 
-                if (ExplorerPositions.Keys.Contains(sender))
+                if (EvacuationAgentsPositions.Keys.Contains(sender))
                 {
                     for (var radius = 1; radius <= FieldOfViewAround; ++radius)
                     {
                         for (var xAxisCoord = coord.X - radius; xAxisCoord <= coord.X + radius; xAxisCoord++)
                         {
-                            if (ResourcePositions!.Values.Contains(
+                            if (ExitsPositions!.Values.Contains(
                                     $@"{xAxisCoord} {coord.Y - radius}")) // search for exit on this axis
                             {
                                 var exitCoordinates = $@"{xAxisCoord} {coord.Y - radius}";
-                                FoundExitAndMoveTo(sender, position, exitCoordinates);
+                                MoveToFoundExit(sender, position, exitCoordinates);
                                 return;
                             }
 
@@ -193,15 +193,15 @@ namespace Reactive
                                 {
                                     Console.WriteLine(@"Found exit in proximity of agent " +
                                                       theAgentNameInProximity.Key);
-                                    FoundExitAndMoveTo(sender, position, exit);
+                                    MoveToFoundExit(sender, position, exit);
                                     return;
                                 }
                             }
 
-                            if (ResourcePositions!.Values.Contains($@"{xAxisCoord} {coord.Y + radius}"))
+                            if (ExitsPositions!.Values.Contains($@"{xAxisCoord} {coord.Y + radius}"))
                             {
                                 var exitCoordinates = $@"{xAxisCoord} {coord.Y + radius}";
-                                FoundExitAndMoveTo(sender, position, exitCoordinates);
+                                MoveToFoundExit(sender, position, exitCoordinates);
                                 return;
                             }
 
@@ -216,7 +216,7 @@ namespace Reactive
                                 {
                                     Console.WriteLine(@"Found exit in proximity of agent " +
                                                       theAgentNameInProximity.Key);
-                                    FoundExitAndMoveTo(sender, position, exit);
+                                    MoveToFoundExit(sender, position, exit);
                                     return;
                                 }
                             }
@@ -224,10 +224,10 @@ namespace Reactive
 
                         for (var yAxisCoord = coord.Y - radius + 1; yAxisCoord <= coord.Y + radius - 1; yAxisCoord++)
                         {
-                            if (ResourcePositions!.Values.Contains($@"{coord.X - radius} {yAxisCoord}"))
+                            if (ExitsPositions!.Values.Contains($@"{coord.X - radius} {yAxisCoord}"))
                             {
                                 var exitCoordinates = $@"{coord.X - radius} {yAxisCoord}";
-                                FoundExitAndMoveTo(sender, position, exitCoordinates);
+                                MoveToFoundExit(sender, position, exitCoordinates);
                                 return;
                             }
 
@@ -242,15 +242,15 @@ namespace Reactive
                                 {
                                     Console.WriteLine(@"Found exit in proximity of agent " +
                                                       theAgentNameInProximity.Key);
-                                    FoundExitAndMoveTo(sender, position, exit);
+                                    MoveToFoundExit(sender, position, exit);
                                     return;
                                 }
                             }
 
-                            if (ResourcePositions!.Values.Contains($@"{coord.X + radius} {yAxisCoord}"))
+                            if (ExitsPositions!.Values.Contains($@"{coord.X + radius} {yAxisCoord}"))
                             {
                                 var exitCoordinates = $@"{coord.X + radius} {yAxisCoord}";
-                                FoundExitAndMoveTo(sender, position, exitCoordinates);
+                                MoveToFoundExit(sender, position, exitCoordinates);
                                 return;
                             }
 
@@ -265,7 +265,7 @@ namespace Reactive
                                 {
                                     Console.WriteLine(@"Found exit in proximity of agent " +
                                                       theAgentNameInProximity.Key);
-                                    FoundExitAndMoveTo(sender, position, exit);
+                                    MoveToFoundExit(sender, position, exit);
                                     return;
                                 }
                             }
@@ -286,25 +286,25 @@ namespace Reactive
         private string FindExitInProximity(string sender, string position)
         {
             var coord = position.ParseCoordinates();
-            if (ExplorerPositions.Keys.Contains(sender))
+            if (EvacuationAgentsPositions.Keys.Contains(sender))
             {
                 for (var radius = 1; radius <= FieldOfViewAround; ++radius)
                 {
                     for (var xAxisCoord = coord.X - radius; xAxisCoord <= coord.X + radius; xAxisCoord++)
                     {
-                        if (ResourcePositions!.Values.Contains($@"{coord.Y - radius} {xAxisCoord}"))
+                        if (ExitsPositions!.Values.Contains($@"{coord.Y - radius} {xAxisCoord}"))
                             return $@"{coord.Y - radius} {xAxisCoord}";
 
-                        if (ResourcePositions!.Values.Contains($@"{coord.Y + radius} {xAxisCoord}"))
+                        if (ExitsPositions!.Values.Contains($@"{coord.Y + radius} {xAxisCoord}"))
                             return $@"{coord.Y + radius} {xAxisCoord}";
                     }
 
                     for (var yAxisCoord = coord.Y - radius + 1; yAxisCoord <= coord.Y + radius - 1; yAxisCoord++)
                     {
-                        if (ResourcePositions!.Values.Contains($@"{coord.X - radius} {yAxisCoord}"))
+                        if (ExitsPositions!.Values.Contains($@"{coord.X - radius} {yAxisCoord}"))
                             return $@"{coord.X - radius} {yAxisCoord}";
 
-                        if (ResourcePositions!.Values.Contains($@"{coord.X + radius} {yAxisCoord}"))
+                        if (ExitsPositions!.Values.Contains($@"{coord.X + radius} {yAxisCoord}"))
                             return $@"{coord.X + radius} {yAxisCoord}";
                     }
                 }
@@ -312,16 +312,16 @@ namespace Reactive
 
             return string.Empty;
         }
-        private void FoundExitAndMoveTo(string sender, string currentPosition, string exitCoordinates)
+        private void MoveToFoundExit(string sender, string currentPosition, string exitCoordinates)
         {
             Console.WriteLine(@$"Found exit at {exitCoordinates}!");
-            ExplorerPositions[sender] = currentPosition; // update current position
+            EvacuationAgentsPositions[sender] = currentPosition; // update current position
             Send(sender, "moveToExit " + exitCoordinates);
         }
 
         private Dictionary<string, string> GetAgentsPositionExceptSender(string sender)
         {
-            var agentsPositionExceptCurrent = new Dictionary<string, string>(ExplorerPositions);
+            var agentsPositionExceptCurrent = new Dictionary<string, string>(EvacuationAgentsPositions);
             agentsPositionExceptCurrent.Remove(sender);
 
             return agentsPositionExceptCurrent;
@@ -338,46 +338,45 @@ namespace Reactive
 
         private void HandlePosition(string sender, string position)
         {
-            if (ExplorerPositions.ContainsValue(position))
+            if (EvacuationAgentsPositions.ContainsValue(position))
             {
                 Send(sender, "block");
                 return;
             }
 
-            ExplorerPositions.Add(sender, position);
+            EvacuationAgentsPositions.Add(sender, position);
             Send(sender, "move");
         }
 
         private void HandleChange(string sender, string position)
         {
-
             if (position == _basePosition)
             {
                 Send(sender, "block");
                 return;
             }
 
-            foreach (string k in ExplorerPositions.Keys)// for each explorer in planet's database
+            foreach (string k in EvacuationAgentsPositions.Keys)// for each evacuation in coordinator's database
             {
-                if (k == sender)  // if current explorer from planet's database is same as explorer that have sent request to change
+                if (k == sender)  // if current evacuation from coordinator's database is same as evacuation that have sent request to change
                     continue;
-                if (ExplorerPositions[k] == position) // if explorer wants to move on a position that another explorer hold, send block
+                if (EvacuationAgentsPositions[k] == position) // if evacuation wants to move on a position that another evacuation hold, send block
                 {
                     Send(sender, "block");
                     return;
                 }
             }
 
-            foreach (var resourcePosition in ResourcePositions.Keys) // ignore exits
+            foreach (var resourcePosition in ExitsPositions.Keys) // ignore exits
             {
-                if (ResourcePositions[resourcePosition] == position)
+                if (ExitsPositions[resourcePosition] == position)
                 {
                     Send(sender, "block");
                     return;
                 }
             }
             
-            ExplorerPositions[sender] = position;
+            EvacuationAgentsPositions[sender] = position;
 
             if (_alertWasStarted && !_agentsNotifiedAboutAlarm.Contains(sender))
             {

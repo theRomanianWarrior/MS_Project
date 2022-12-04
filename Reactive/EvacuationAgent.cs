@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Reactive
 {
-    public class ExplorerAgent : Agent
+    public class EvacuationAgent : Agent
     {
         private readonly Coordinates _coordinates = new();
         private State _state;
@@ -14,7 +14,7 @@ namespace Reactive
             
         private enum State { EmergencyOff, EmergencyOn };
 
-        // first build explorer agents
+        // first build evacuation agents
         public override void Setup()
         {
             Console.WriteLine(@"Starting " + Name);
@@ -33,7 +33,7 @@ namespace Reactive
             _lastTwoSteps[0].X = _coordinates.X;
             _lastTwoSteps[0].Y = _coordinates.Y;
             
-            Send("planet", Utils.Str("position", _coordinates.X, _coordinates.Y));
+            Send("coordinator", Utils.Str("position", _coordinates.X, _coordinates.Y));
         }
 
         private bool IsAtBase()
@@ -53,14 +53,14 @@ namespace Reactive
                 _state = State.EmergencyOn;
 
                 MoveRandomConstant();
-                Send("planet", Utils.Str("findExitInMyArea", _coordinates.X, _coordinates.Y));
+                Send("coordinator", Utils.Str("findExitInMyArea", _coordinates.X, _coordinates.Y));
             }
             else if (action == "block")
             {
                 CancelLastStepInHistory();
                 // R1. If you detect an obstacle, then change direction
                 MoveRandomly();
-                Send("planet", Utils.Str("change", _coordinates.X, _coordinates.Y));
+                Send("coordinator", Utils.Str("change", _coordinates.X, _coordinates.Y));
             }
             else if (action == "move")
             {
@@ -68,13 +68,13 @@ namespace Reactive
                 {
                     Console.WriteLine(@$"agent {this.Name} change command to move constant");
                     MoveRandomConstant();
-                    Send("planet", Utils.Str("findExitInMyArea", _coordinates.X, _coordinates.Y));
+                    Send("coordinator", Utils.Str("findExitInMyArea", _coordinates.X, _coordinates.Y));
                 }
                 else
                 {
                     Console.WriteLine(@$"agent {this.Name} change command to move random");
                     MoveRandomly(); // move randomly ignoring exits
-                    Send("planet", Utils.Str("change", _coordinates.X, _coordinates.Y));
+                    Send("coordinator", Utils.Str("change", _coordinates.X, _coordinates.Y));
                 }
             }
             else if(action == "moveToExit")
@@ -86,7 +86,7 @@ namespace Reactive
             else if (action == "directionToExitBlocked")
             {
                 MoveRandomlyBasedOnHistoryStep();
-                Send("planet", Utils.Str("findExitInMyArea", _coordinates.X, _coordinates.Y));
+                Send("coordinator", Utils.Str("findExitInMyArea", _coordinates.X, _coordinates.Y));
             }
         }
 
@@ -117,7 +117,7 @@ namespace Reactive
             }
         }
         
-        private void MoveToExit(string exitCoordinates) // this should be resolved!!!!!!!!!!!!!!!!!!!!!!!! it moves just forward, but it does not take into account the obstacles
+        private void MoveToExit(string exitCoordinates)
         {
             var exitPosition = exitCoordinates.ParseCoordinates();
             _foundExitPosition = exitPosition;
@@ -135,7 +135,7 @@ namespace Reactive
                 ++_coordinates.Y;
             
             UpdateStepsCoordinatesForY();
-            Send("planet", Utils.Str("nextMoveToExit", _coordinates.X, _coordinates.Y));  
+            Send("coordinator", Utils.Str("nextMoveToExit", _coordinates.X, _coordinates.Y));  
         }
         
         private void UpdateStepsCoordinatesForY()

@@ -1,28 +1,36 @@
-﻿namespace Reactive;
+﻿using System;
 
-using System;
-					
-public static class Sketches
+public class Sketches
 {
-    private static void FindExitInProximity()
+    public record Coordinates
     {
-        const int fieldOfViewAround = 1;
-        const int x = 6;
-        const int y = 3;
+        public int X { get; set; }
+        public int Y { get; set; }
+    
+    }
 
+    private static Coordinates coord = new()
+    {
+        X = 6,
+        Y = 0
+    };
+    private static int fieldOfViewAround = 2;
+    public static void Main1(string[] args)
+    {
         for (var radius = 1; radius <= fieldOfViewAround; ++radius)
         {
-            for (var xAxisCoord = x - radius; xAxisCoord <= x + radius; xAxisCoord++)
+            for (var xAxisCoord = coord.X - radius; xAxisCoord <= coord.X + radius; xAxisCoord++)
             {
-                Console.WriteLine(@$"{y - radius} {xAxisCoord}");
-                Console.WriteLine(@$"{y + radius} {xAxisCoord}");
+                Console.WriteLine($@"{xAxisCoord} {coord.Y - radius}");
+                Console.WriteLine($@"{xAxisCoord} {coord.Y + radius}");
             }
 
-            for (var yAxisCoord = y - radius + 1; yAxisCoord <= y + radius - 1; yAxisCoord++)
+            for (var yAxisCoord = coord.Y - radius + 1; yAxisCoord <= coord.Y + radius - 1; yAxisCoord++)
             {
-                Console.WriteLine(@$"{x - radius} {yAxisCoord}");
-                Console.WriteLine(@$"{x + radius} {yAxisCoord}");
+                Console.WriteLine($@"{coord.X - radius} {yAxisCoord}");
+                Console.WriteLine($@"{coord.X + radius} {yAxisCoord}");
             }
+            Console.WriteLine();
         }
     }
 }

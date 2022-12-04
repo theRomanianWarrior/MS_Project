@@ -5,9 +5,9 @@ namespace Reactive
 {
     public static class Utils
     {
-        public static readonly int Size = 11;
-        public static readonly int NoExplorers = 20;//119; // No of worker agents
-        public static readonly int NoResources = 1; // No of exits
+        public static readonly int Size = 12;
+        public static readonly int NoExplorers = 10; // No of worker agents
+        public static readonly int NoResources = 2; // No of exits
         public static readonly int SecondsBeforeAlarm = 5;
         
         public static readonly int DelayBetweenTurns = 0;
