@@ -2,6 +2,7 @@
 using Message = ActressMas.Message;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,17 +19,30 @@ namespace Reactive
         private bool _alertWasStarted;
         private const int FieldOfViewAround = 2; // this mean 3x3
         private readonly List<string> _agentsNotifiedAboutAlarm = new();
-
+        private readonly Stopwatch _watch = new ();
+        private List<double> EvacuationTimeHistory = new();
+        
         public CoordinatorAgent()
         {
             EvacuationAgentsPositions = new Dictionary<string, string>();
             ExitsPositions = new Dictionary<string, string>();
             _basePosition = Utils.Str(Utils.Size / 2, Utils.Size / 2);
-
+            MasEnvSingleton.Instance = new EnvironmentMas();
             var t = new Thread(GuiThread);
             t.Start();
         }
 
+        private void ResetAllResourcesAndUpdateUi()
+        {
+            EvacuationAgentsPositions.Clear();
+            ExitsPositions.Clear();
+            _alertWasStarted = false;
+            _agentsNotifiedAboutAlarm.Clear();
+            _watch.Reset();
+            
+            _formGui.UpdatePlanetGUI();
+        }
+        
         private void GuiThread()
         {
             _formGui = new PlanetForm();
@@ -37,6 +51,25 @@ namespace Reactive
             Application.Run();
         }
 
+        private void BeginNewRound()
+        {
+            //Thread.Sleep(100);
+            Console.WriteLine($@"Remaining rounds: {Utils.NumberOfRepeatingRounds}");
+            ResetAllResourcesAndUpdateUi();
+            
+            AddEvacuationAgentsAgainForNewRound();
+
+            Setup();
+        }
+
+        private void AddEvacuationAgentsAgainForNewRound()
+        {
+            for (var i = 1; i <= Utils.NoEvacuationAgents; i++)
+            {
+                var explorerAgent = new EvacuationAgent();
+                MasEnvSingleton.Instance.Add(explorerAgent, "evacuation" + i);
+            }
+        }
         // second build resources
         public override void Setup()
         {
@@ -46,7 +79,7 @@ namespace Reactive
             string compPos = Utils.Str(Utils.Size / 2, Utils.Size / 2);
             resPos.Add(compPos); // the position of the base
 
-            for (int i = 1; i <= Utils.NoResources; i++)
+            for (int i = 1; i <= Utils.NoExits; i++)
             {
                 while (resPos.Contains(compPos)) // resources do not overlap
                 {
@@ -147,7 +180,24 @@ namespace Reactive
                     Environment.Remove(sender);
                     if (Environment.NoAgents == 1)
                     {
-                        this.Stop();
+                        _watch.Stop();
+                        if (Utils.NumberOfRepeatingRounds > 0)
+                        {
+                            _formGui.UpdatePlanetGUI();
+                            --Utils.NumberOfRepeatingRounds;
+                            var evacuationTime = Math.Round(TimeSpan.FromMilliseconds(_watch.ElapsedMilliseconds).TotalSeconds, 3);
+                            Console.WriteLine(@$"Time required to evacuate this round: {evacuationTime}");
+
+                            EvacuationTimeHistory.Add(evacuationTime);
+                            BeginNewRound();
+                            return;
+                        }
+                        else
+                        {
+                            Console.WriteLine(@$"Average Evacuation Time: {EvacuationTimeHistory.Average()} seconds");
+                            this.Stop();
+                            return;
+                        }
                     }
                 }
 
@@ -333,6 +383,7 @@ namespace Reactive
             {
                 _formGui.UpdatePlanetGUI(true);
                 _alertWasStarted = true;
+                _watch.Start();
             }
         }
 

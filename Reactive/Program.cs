@@ -1,23 +1,19 @@
-﻿using ActressMas;
-
-namespace Reactive
+﻿namespace Reactive
 {
     public static class Program
     {
         private static void Main()
         {
-            var env = new EnvironmentMas(0, 100);
-
             var planetAgent = new CoordinatorAgent();
-            env.Add(planetAgent, "coordinator");
+            MasEnvSingleton.Instance.Add(planetAgent, "coordinator");
             
-            for (var i = 1; i <= Utils.NoExplorers; i++)
+            for (var i = 1; i <= Utils.NoEvacuationAgents; i++)
             {
                 var explorerAgent = new EvacuationAgent();
-                env.Add(explorerAgent, "evacuation" + i);
+                MasEnvSingleton.Instance.Add(explorerAgent, "evacuation" + i);
             }
             
-            env.Start();
+            MasEnvSingleton.Instance.Start();
         }
     }
 }

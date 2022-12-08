@@ -5,13 +5,14 @@ namespace Reactive
 {
     public static class Utils
     {
-        public static readonly int Size = 12;
-        public static readonly int NoExplorers = 10; // No of worker agents
-        public static readonly int NoResources = 2; // No of exits
-        public static readonly int SecondsBeforeAlarm = 5;
+        public static readonly int Size = 10;
+        public static readonly int NoEvacuationAgents = 20; // No of worker agents
+        public static readonly int NoExits = 3; // No of exits
+        public static readonly int SecondsBeforeAlarm = 1;
         
         public static readonly int DelayBetweenTurns = 0;
         public static readonly Random RandNoGen = new();
+        public static int NumberOfRepeatingRounds = 100;
 
 
         public static Coordinates ParseCoordinates(this string coordinates)

@@ -50,7 +50,7 @@
             this.ClientSize = new System.Drawing.Size(595, 591);
             this.Controls.Add(this.pictureBox);
             this.Name = "PlanetForm";
-            this.Text = "Planet";
+            this.Text = "Evacuation";
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).EndInit();
             this.ResumeLayout(false);
 
